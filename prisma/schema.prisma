@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// 1
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 2
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 3
+model Link {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  description String
+  url         String
+  postedBy    User?    @relation(fields: [postedById], references: [id])
+  postedById  Int?
+}
+
+// postedBy User? @relation(fields: [postedById], references: [id]):
+
+//     postedBy — это имя свойства, которое будет использоваться для доступа к связанному объекту User из модели Link. Знак вопроса (?) указывает, что это свойство является опциональным, то есть может быть null.
+//     @relation(fields: [postedById], references: [id]) указывает, что поле postedById в модели Link ссылается на поле id в модели User. Это означает, что postedById — это внешний ключ, который связывает Link с User.
+
+// postedById Int?:
+
+//     postedById — это поле, которое хранит идентификатор пользователя, который опубликовал ссылку. Тип Int? указывает, что это поле является опциональным и может иметь значение null, если ссылка не привязана к конкретному пользователю.
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  links     Link[]
+}
+
+// npx prisma init
+// npx prisma migrate dev
+// npx prisma generate
+// npx prisma studio
+
+// при обновлении
+// npx prisma migrate dev --name "description"
+// npx prisma generate
