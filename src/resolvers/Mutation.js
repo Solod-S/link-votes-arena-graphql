@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { APP_SECRET } = require("../utils");
 
+// auth
 const signup = async (parent, args, context, info) => {
   const password = await bcrypt.hash(args.password, 10);
 
@@ -16,15 +17,6 @@ const signup = async (parent, args, context, info) => {
     user,
   };
 };
-
-// mutation {
-//   signup(name: "Alice", email: "alice@prisma.io", password: "graphql") {
-//     token
-//     user {
-//       id
-//     }
-//   }
-// }
 
 const login = async (parent, args, context, info) => {
   const user = await context.prisma.user.findUnique({
@@ -47,17 +39,32 @@ const login = async (parent, args, context, info) => {
   };
 };
 
-// {
-//   "data": {
-//     "login": {
-//       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcyMjQzNzkzNn0.WaVgXyYP-4vAKFIvgek_7tb11lXBSYNJl1-8cXzEFGs",
-//       "user": {
-//         "email": "alice@prisma.io",
-//         "links": []
-//       }
-//     }
-//   }
-// }
+const removeUser = async (parent, args, context, info) => {
+  console.log("Removing user");
+  const { userId } = context;
+  console.log("userId", userId);
+  const dellUserId = Number(args.id);
+  console.log("dellUserId", dellUserId);
+  const user = await context.prisma.user.findUnique({
+    where: { id: dellUserId },
+  });
+  console.log("user", user);
+  if (!user) {
+    throw new Error("No such user found");
+  }
+
+  if (user.id !== userId) {
+    throw new Error("You are not authorized to delete this user");
+  }
+
+  const deletedUser = await context.prisma.user.delete({
+    where: { id: dellUserId },
+  });
+  console.log("deletedUser", deletedUser);
+  return deletedUser;
+};
+
+// data
 
 const postLink = async (parent, args, context) => {
   const { userId } = context;
@@ -73,19 +80,10 @@ const postLink = async (parent, args, context) => {
   return newLink;
 };
 
-// mutation {
-//   postLink(url: "www.com", description: "sss") {
-//     id
-//     description
-//     url
-//   }
-// }
-
-// + add HTTP HEADERS
+// HTTP HEADERS
 // {
-//   "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyMjQzNzYyMn0.wZ01cOP79Ef2uGh91CuzlNV1WxJXFJTqOHFgFe0PSXw"
+//   "Authorization": ""
 // }
-
 const removeLink = async (parent, args, context) => {
   const { userId } = context;
   const linkId = Number(args.id);
@@ -109,17 +107,9 @@ const removeLink = async (parent, args, context) => {
   return deletedLink;
 };
 
-// mutation {
-//   removeLink(id: 10) {
-//     id
-//     description
-//     url
-//   }
-// }
-
 // + add HTTP HEADERS
 // {
-//   "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyMjQzNzYyMn0.wZ01cOP79Ef2uGh91CuzlNV1WxJXFJTqOHFgFe0PSXw"
+//   "Authorization": ""
 // }
 
 const updateLink = async (parent, args, context) => {
@@ -155,17 +145,9 @@ const updateLink = async (parent, args, context) => {
   return updatedLink;
 };
 
-// mutation {
-// updateLink (id: 11, url:"test", description:"some desc") {
-// url
-// description
-//   id
-// }
-// }
-
 // + add HTTP HEADERS
 // {
-//   "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyMjQzNzYyMn0.wZ01cOP79Ef2uGh91CuzlNV1WxJXFJTqOHFgFe0PSXw"
+//   "Authorization": ""
 // }
 
 module.exports = {
@@ -178,4 +160,5 @@ module.exports = {
   postLink,
   removeLink,
   updateLink,
+  removeUser,
 };

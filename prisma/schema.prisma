@@ -21,7 +21,8 @@ model Link {
   createdAt   DateTime @default(now())
   description String
   url         String
-  postedBy    User?    @relation(fields: [postedById], references: [id])
+  // postedBy    User?    @relation(fields: [postedById], references: [id]) без каскада
+  postedBy    User?    @relation("UserLinks", fields: [postedById], references: [id], onDelete: Cascade)
   postedById  Int?
 }
 
@@ -39,7 +40,8 @@ model User {
   name      String
   email     String   @unique
   password  String
-  links     Link[]
+  // links     Link[] без каскада
+  links     Link[]   @relation("UserLinks")
 }
 
 // npx prisma init
