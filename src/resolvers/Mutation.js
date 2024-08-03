@@ -68,7 +68,6 @@ const removeUser = async (parent, args, context, info) => {
 
 const postLink = async (parent, args, context) => {
   const { userId } = context;
-  console.log(`userId`, userId);
 
   const newLink = await context.prisma.link.create({
     data: {
@@ -77,6 +76,10 @@ const postLink = async (parent, args, context) => {
       postedBy: { connect: { id: userId } },
     },
   });
+
+  context.pubsub.publish("NEW_LINK", newLink);
+  // лоигка подписки
+
   return newLink;
 };
 

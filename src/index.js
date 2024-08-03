@@ -1,4 +1,5 @@
-const { ApolloServer } = require("apollo-server");
+const { ApolloServer, PubSub } = require("apollo-server");
+
 const { PrismaClient } = require("@prisma/client");
 const { getUserId } = require("./utils");
 const { applyMiddleware } = require("graphql-middleware");
@@ -8,6 +9,7 @@ const path = require("path");
 require("dotenv").config();
 
 const prisma = new PrismaClient();
+const pubsub = new PubSub();
 
 const typeDefs = fs.readFileSync(
   path.join(__dirname, "schema.graphql"),
@@ -17,6 +19,7 @@ const typeDefs = fs.readFileSync(
 const resolvers = {
   Query: require("./resolvers/Query"),
   Mutation: require("./resolvers/Mutation"),
+  Subscription: require("./resolvers/Subscription"),
   Link: require("./resolvers/Link"),
   User: require("./resolvers/User"),
 };
@@ -81,7 +84,8 @@ const server = new ApolloServer({
   context: ({ req }) => ({
     ...req,
     prisma,
-    userId: req.headers.authorization ? getUserId(req) : null,
+    pubsub,
+    userId: req?.headers?.authorization ? getUserId(req) : null,
   }),
 });
 
