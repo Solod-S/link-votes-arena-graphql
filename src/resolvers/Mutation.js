@@ -153,6 +153,51 @@ const updateLink = async (parent, args, context) => {
 //   "Authorization": ""
 // }
 
+const vote = async (parent, args, context, info) => {
+  const userId = context.userId;
+
+  // const userExists = await context.prisma.user.findUnique({
+  //   where: { id: userId },
+  // });
+  // const linkExists = await context.prisma.link.findUnique({
+  //   where: { id: Number(args.linkId) },
+  // });
+
+  // console.log(`User Exists:`, userExists);
+  // console.log(`Link Exists:`, linkExists);
+
+  const vote = await context.prisma.vote.findUnique({
+    where: {
+      linkId_userId: {
+        linkId: Number(args.linkId),
+        userId: userId,
+      },
+    },
+  });
+
+  if (Boolean(vote)) {
+    throw new Error(`Already voted for link: ${args.linkId}`);
+    // если пользователь уже проголосовал
+  }
+
+  const newVote = await context.prisma.vote.create({
+    data: {
+      user: { connect: { id: userId } },
+      link: { connect: { id: Number(args.linkId) } },
+    },
+  });
+
+  context.pubsub.publish("NEW_VOTE", newVote);
+  // подписка на новые голосования
+
+  return newVote;
+};
+
+// + add HTTP HEADERS
+// {
+//   "Authorization": ""
+// }
+
 module.exports = {
   updateLink,
 };
@@ -160,8 +205,9 @@ module.exports = {
 module.exports = {
   signup,
   login,
+  removeUser,
   postLink,
   removeLink,
   updateLink,
-  removeUser,
+  vote,
 };

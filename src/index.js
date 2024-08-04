@@ -20,6 +20,7 @@ const resolvers = {
   Query: require("./resolvers/Query"),
   Mutation: require("./resolvers/Mutation"),
   Subscription: require("./resolvers/Subscription"),
+  Vote: require("./resolvers/Vote"),
   Link: require("./resolvers/Link"),
   User: require("./resolvers/User"),
 };
