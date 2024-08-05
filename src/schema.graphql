@@ -1,7 +1,21 @@
+input LinkOrderByInput {
+  description: Sort
+  url: Sort
+  createdAt: Sort
+  id: Sort
+}
+
+enum Sort {
+  asc
+  desc
+}
+# sort
+
 type Query {
   info: String!
-  feed: [Link!]!
+  feed(filter: String, skip: Int, take: Int, orderBy: LinkOrderByInput): Feed
 }
+# skip: Int, take: Int - офсет пагинация
 
 type Mutation {
   signup(email: String!, password: String!, name: String!): AuthPayload
@@ -12,6 +26,12 @@ type Mutation {
   updateLink(id: ID!, url: String, description: String): Link!
   vote(linkId: ID!): Vote
 }
+
+type Feed {
+  links: [Link!]!
+  count: Int!
+}
+# для отображения количества линков
 
 type Subscription {
   newLink: Link
@@ -24,6 +44,7 @@ type Link {
   url: String!
   postedBy: User
   votes: [Vote]!
+  createdAt: String!
 }
 
 type AuthPayload {
