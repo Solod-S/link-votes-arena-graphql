@@ -10,6 +10,7 @@ require("dotenv").config();
 
 const prisma = new PrismaClient();
 const pubsub = new PubSub();
+// subscriptions
 
 const typeDefs = fs.readFileSync(
   path.join(__dirname, "schema.graphql"),

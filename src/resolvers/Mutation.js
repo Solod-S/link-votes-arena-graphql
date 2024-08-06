@@ -1,19 +1,23 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { APP_SECRET } = require("../utils");
+const {
+  generateAccessToken,
+  hashPassword,
+  comparePassword,
+  generateRefreshToken,
+} = require("../utils");
 
 // auth
 const signup = async (parent, args, context, info) => {
-  const password = await bcrypt.hash(args.password, 10);
+  const password = await hashPassword(args.password, 10);
 
   const user = await context.prisma.user.create({
     data: { ...args, password },
   });
 
-  const token = jwt.sign({ userId: user.id }, APP_SECRET);
-
+  const accessToken = generateAccessToken({ userId: user.id });
+  const refreshToken = generateRefreshToken({ userId: user.id });
   return {
-    token,
+    accessToken,
+    refreshToken,
     user,
   };
 };
@@ -22,33 +26,31 @@ const login = async (parent, args, context, info) => {
   const user = await context.prisma.user.findUnique({
     where: { email: args.email },
   });
+
   if (!user) {
     throw new Error("No such user found");
   }
 
-  const valid = await bcrypt.compare(args.password, user.password);
+  const valid = await comparePassword(args.password, user.password);
   if (!valid) {
     throw new Error("Invalid password");
   }
 
-  const token = jwt.sign({ userId: user.id }, APP_SECRET);
-
+  const accessToken = generateAccessToken({ userId: user.id });
+  const refreshToken = generateRefreshToken({ userId: user.id });
   return {
-    token,
+    accessToken,
+    refreshToken,
     user,
   };
 };
 
 const removeUser = async (parent, args, context, info) => {
-  console.log("Removing user");
   const { userId } = context;
-  console.log("userId", userId);
   const dellUserId = Number(args.id);
-  console.log("dellUserId", dellUserId);
   const user = await context.prisma.user.findUnique({
     where: { id: dellUserId },
   });
-  console.log("user", user);
   if (!user) {
     throw new Error("No such user found");
   }
@@ -60,11 +62,29 @@ const removeUser = async (parent, args, context, info) => {
   const deletedUser = await context.prisma.user.delete({
     where: { id: dellUserId },
   });
-  console.log("deletedUser", deletedUser);
+
   return deletedUser;
 };
 
-// data
+const refreshTokens = async (parent, args, context, info) => {
+  const { userId } = context;
+
+  const user = await context.prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error("No such user found");
+  }
+  const accessToken = generateAccessToken({ userId: Number(args.id) });
+  const refreshToken = generateRefreshToken({ userId: Number(args.id) });
+
+  return {
+    accessToken,
+    refreshToken,
+    user,
+  };
+};
 
 const postLink = async (parent, args, context) => {
   const { userId } = context;
@@ -87,6 +107,7 @@ const postLink = async (parent, args, context) => {
 // {
 //   "Authorization": ""
 // }
+
 const removeLink = async (parent, args, context) => {
   const { userId } = context;
   const linkId = Number(args.id);
@@ -210,4 +231,5 @@ module.exports = {
   removeLink,
   updateLink,
   vote,
+  refreshTokens,
 };
