@@ -3,6 +3,7 @@ input LinkOrderByInput {
   url: Sort
   createdAt: Sort
   id: Sort
+  votesCount: Sort
 }
 
 enum Sort {
@@ -26,6 +27,7 @@ type Mutation {
   removeLink(id: ID!): Link!
   updateLink(id: ID!, url: String, description: String): Link!
   vote(linkId: ID!): Vote
+  unVote(linkId: ID!): Link
 }
 
 type Feed {

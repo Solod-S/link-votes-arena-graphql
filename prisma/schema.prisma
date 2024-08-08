@@ -24,7 +24,9 @@ model Link {
   // postedBy    User?    @relation(fields: [postedById], references: [id]) без каскада
   postedBy    User?    @relation("UserLinks", fields: [postedById], references: [id], onDelete: Cascade)
   postedById  Int?
-    votes       Vote[]
+  votes       Vote[]
+  votesCount  Int      @default(0)
+    
 }
 
 // postedBy User? @relation(fields: [postedById], references: [id]):
@@ -64,3 +66,7 @@ model Vote {
 // при обновлении
 // npx prisma migrate dev --name "description"
 // npx prisma generate
+
+
+// чистка
+// rm -rf prisma/migrations

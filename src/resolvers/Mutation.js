@@ -5,6 +5,11 @@ const {
   generateRefreshToken,
 } = require("../utils");
 
+// HTTP AUTH HEADER
+// {
+//   "Authorization": ""
+// }
+
 // auth
 const signup = async (parent, args, context, info) => {
   const password = await hashPassword(args.password, 10);
@@ -103,11 +108,6 @@ const postLink = async (parent, args, context) => {
   return newLink;
 };
 
-// HTTP HEADERS
-// {
-//   "Authorization": ""
-// }
-
 const removeLink = async (parent, args, context) => {
   const { userId } = context;
   const linkId = Number(args.id);
@@ -130,11 +130,6 @@ const removeLink = async (parent, args, context) => {
 
   return deletedLink;
 };
-
-// + add HTTP HEADERS
-// {
-//   "Authorization": ""
-// }
 
 const updateLink = async (parent, args, context) => {
   const { userId } = context;
@@ -169,23 +164,8 @@ const updateLink = async (parent, args, context) => {
   return updatedLink;
 };
 
-// + add HTTP HEADERS
-// {
-//   "Authorization": ""
-// }
-
 const vote = async (parent, args, context, info) => {
   const userId = context.userId;
-
-  // const userExists = await context.prisma.user.findUnique({
-  //   where: { id: userId },
-  // });
-  // const linkExists = await context.prisma.link.findUnique({
-  //   where: { id: Number(args.linkId) },
-  // });
-
-  // console.log(`User Exists:`, userExists);
-  // console.log(`Link Exists:`, linkExists);
 
   const vote = await context.prisma.vote.findUnique({
     where: {
@@ -208,16 +188,67 @@ const vote = async (parent, args, context, info) => {
     },
   });
 
+  // обновления каунтера
+  const count = await context.prisma.vote.count({
+    where: { linkId: Number(args.linkId) },
+  });
+  await context.prisma.link.update({
+    where: { id: Number(args.linkId) },
+    data: { votesCount: count },
+  });
+
   context.pubsub.publish("NEW_VOTE", newVote);
   // подписка на новые голосования
 
   return newVote;
 };
 
-// + add HTTP HEADERS
-// {
-//   "Authorization": ""
-// }
+const unVote = async (parent, args, context, info) => {
+  const userId = context.userId;
+  const linkId = Number(args.linkId);
+
+  // Найти существующий голос
+  const vote = await context.prisma.vote.findUnique({
+    where: {
+      linkId_userId: {
+        linkId,
+        userId,
+      },
+    },
+  });
+
+  if (!vote) {
+    throw new Error(`You have not voted for this link yet: ${linkId}`);
+    // если пользователь еще не проголосовал
+  }
+
+  // Удалить голос
+  await context.prisma.vote.delete({
+    where: {
+      id: vote.id,
+    },
+  });
+
+  // Обновление счётчика голосов
+  const count = await context.prisma.vote.count({
+    where: { linkId },
+  });
+
+  await context.prisma.link.update({
+    where: { id: linkId },
+    data: { votesCount: count },
+  });
+
+  // Публикация события (если это нужно)
+  const updatedLink = await context.prisma.link.findUnique({
+    where: { id: linkId },
+    include: { votes: true }, // Включаем связанные голоса, если нужно
+  });
+
+  context.pubsub.publish("NEW_VOTE", { updatedLink });
+
+  return updatedLink;
+};
 
 module.exports = {
   updateLink,
@@ -226,10 +257,11 @@ module.exports = {
 module.exports = {
   signup,
   login,
+  refreshTokens,
   removeUser,
   postLink,
   removeLink,
   updateLink,
   vote,
-  refreshTokens,
+  unVote,
 };
