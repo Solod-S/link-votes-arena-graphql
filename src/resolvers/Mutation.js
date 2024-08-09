@@ -27,6 +27,28 @@ const signup = async (parent, args, context, info) => {
   };
 };
 
+const updateUser = async (parent, args, context) => {
+  const { email, password } = args;
+  const { userId } = context;
+
+  const user = await context.prisma.user.findUnique({
+    where: { id: userId },
+  });
+  if (!user) {
+    throw new Error("No such user found");
+  }
+
+  const updatedUser = await context.prisma.user.update({
+    where: { id: userId },
+    data: {
+      email: email || user.email,
+      password: password || user.password,
+    },
+  });
+
+  return updatedUser;
+};
+
 const login = async (parent, args, context, info) => {
   const user = await context.prisma.user.findUnique({
     where: { email: args.email },
@@ -257,6 +279,7 @@ module.exports = {
 module.exports = {
   signup,
   login,
+  updateUser,
   refreshTokens,
   removeUser,
   postLink,
