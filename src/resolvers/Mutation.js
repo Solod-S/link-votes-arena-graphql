@@ -3,6 +3,7 @@ const {
   hashPassword,
   comparePassword,
   generateRefreshToken,
+  getTokenPayload,
 } = require("../utils");
 
 // HTTP AUTH HEADER
@@ -28,7 +29,7 @@ const signup = async (parent, args, context, info) => {
 };
 
 const updateUser = async (parent, args, context) => {
-  const { email, password } = args;
+  const { email, password, name } = args;
   const { userId } = context;
 
   const user = await context.prisma.user.findUnique({
@@ -43,6 +44,7 @@ const updateUser = async (parent, args, context) => {
     data: {
       email: email || user.email,
       password: password || user.password,
+      name: name || user.name,
     },
   });
 
@@ -94,8 +96,7 @@ const removeUser = async (parent, args, context, info) => {
 };
 
 const refreshTokens = async (parent, args, context, info) => {
-  const { userId } = context;
-
+  const { userId } = await getTokenPayload(args.refreshToken);
   const user = await context.prisma.user.findUnique({
     where: { id: userId },
   });

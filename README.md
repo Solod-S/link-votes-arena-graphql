@@ -136,7 +136,7 @@ yarn;
 ```javascript
 APP_SECRET=YOUR_APP_SECRET;
 DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public"
-JWT_ACCESS_EXPIRATION=11d
+JWT_ACCESS_EXPIRATION=1d
 JWT_REFRESH_EXPIRATION=7d
 ```
 
