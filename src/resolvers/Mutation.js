@@ -274,10 +274,6 @@ const unVote = async (parent, args, context, info) => {
 };
 
 module.exports = {
-  updateLink,
-};
-
-module.exports = {
   signup,
   login,
   updateUser,
